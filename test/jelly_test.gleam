@@ -58,3 +58,10 @@ pub fn nested_test() {
   let assert [jelly.Object(f_wrapper)] = e
   let assert Ok(jelly.String("g")) = dict.get(f_wrapper, "f")
 }
+
+pub fn path_test() {
+  let assert Ok(json_text) = simplifile.read("test/nested.json")
+  let assert Ok(json) = jelly.parse(json_text)
+
+  let assert Ok(jelly.String("g")) = jelly.path(json, "a.b.c.d[0].e[0].f")
+}

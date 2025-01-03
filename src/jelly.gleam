@@ -1,6 +1,12 @@
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
+import gleam/int
+import gleam/io
 import gleam/list
+import gleam/option.{Some}
+import gleam/regexp
+import gleam/result
+import gleam/string
 
 /// From gleam/json
 /// 
@@ -24,9 +30,7 @@ pub type JsonType {
 }
 
 pub fn parse(from json: String) -> Result(JsonType, DecodeError) {
-  let json_decode_result = decode_to_dict(json)
-
-  case json_decode_result {
+  case decode_to_dict(json) {
     Ok(dict) ->
       dict
       |> dynamic.from
@@ -35,9 +39,6 @@ pub fn parse(from json: String) -> Result(JsonType, DecodeError) {
     Error(error) -> Error(error)
   }
 }
-
-@external(erlang, "jelly_json", "decode")
-fn decode_to_dict(json: String) -> Result(Dict(Dynamic, Dynamic), DecodeError)
 
 /// Decodes any Dynamic into a JsonType which can be matched
 /// on to extract the data. If decoding fails, the dynamic value is returned.
@@ -78,6 +79,90 @@ pub fn decode(from value: dynamic.Dynamic) -> JsonType {
                   }
               }
           }
+      }
+  }
+}
+
+/// Select a nested value from a JsonType object
+/// using a path expression (e.g. "a.b.c[3]"). Returns
+/// Nil if the path does not lead to a value.
+/// 
+pub fn path(json: JsonType, path: String) -> Result(JsonType, Nil) {
+  let keys = parse_path_keys(path)
+  do_path(json, keys)
+}
+
+fn do_path(json: JsonType, keys: List(PathKey)) -> Result(JsonType, Nil) {
+  // Ensure we have a key
+  io.debug(keys)
+  io.debug(json)
+  case keys {
+    // If we are still here without any keys left,
+    // we have our result
+    [] -> Ok(json)
+    // If more keys, continue to traverse
+    [key, ..remaining_keys] -> {
+      case json, key {
+        // Property is a valid accessor for an object
+        Object(x), Property(property) ->
+          case dict.get(x, property) {
+            Ok(value) -> do_path(value, remaining_keys)
+            Error(_) -> Error(Nil)
+          }
+        // Indexer is a valid accessor for an array
+        Array(x), Indexer(index) ->
+          list_get(x, index) |> result.try(do_path(_, remaining_keys))
+        // Anything else is not valid and means the path leads nowhere
+        _, _ -> Error(Nil)
+      }
+    }
+  }
+}
+
+fn parse_path_keys(path: String) -> List(PathKey) {
+  string.split(path, ".")
+  |> list.map(fn(path_key) {
+    case parse_indexer(path_key) {
+      Ok(keys) -> keys
+      Error(_) -> [Property(path_key)]
+    }
+  })
+  |> list.flatten()
+}
+
+fn parse_indexer(val: String) -> Result(List(PathKey), Nil) {
+  let assert Ok(regex) =
+    regexp.from_string("^(?<property>[A-z]+)\\[(?<index>[0-9]+)\\]$")
+  case regexp.scan(regex, val) {
+    [match] ->
+      case match.submatches {
+        [Some(property), Some(index)] ->
+          case int.parse(index) {
+            Ok(index) -> Ok([Property(property), Indexer(index)])
+            Error(_) -> Error(Nil)
+          }
+        _ -> Error(Nil)
+      }
+    _ -> Error(Nil)
+  }
+}
+
+type PathKey {
+  // Root
+  Indexer(Int)
+  Property(String)
+}
+
+@external(erlang, "jelly_json", "decode")
+fn decode_to_dict(json: String) -> Result(Dict(Dynamic, Dynamic), DecodeError)
+
+fn list_get(list: List(a), index: Int) -> Result(a, Nil) {
+  case index {
+    0 -> list.first(list)
+    _ ->
+      case list.rest(list) {
+        Ok(rest) -> list_get(rest, index - 1)
+        Error(_) -> Error(Nil)
       }
   }
 }
