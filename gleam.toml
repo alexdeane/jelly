@@ -2,7 +2,7 @@ name = "jelly"
 licences = ["Apache-2.0"]
 description = "Gleam library for working with arbitrary JSON structures"
 
-version = "1.0.0"
+version = "1.0.1"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
 # your project to the Hex package manager.
@@ -18,6 +18,7 @@ version = "1.0.0"
 [dependencies]
 gleam_stdlib = ">= 0.51.0 and < 1.0.0"
 gleam_regexp = ">= 1.0.0 and < 2.0.0"
+gleam_erlang = ">= 0.33.0 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

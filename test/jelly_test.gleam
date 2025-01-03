@@ -19,6 +19,7 @@ pub fn data_types_test() {
   let assert Ok(jelly.Int(1)) = dict.get(object, "int")
   let assert Ok(jelly.Float(1.1)) = dict.get(object, "float")
   let assert Ok(jelly.Bool(True)) = dict.get(object, "bool")
+  let assert Ok(jelly.Null) = dict.get(object, "null")
 
   // Arrays
   let assert Ok(jelly.Array([jelly.Int(1), jelly.Int(2), jelly.Int(3)])) =

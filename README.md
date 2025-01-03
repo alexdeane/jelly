@@ -10,6 +10,7 @@ JSON parsing library for arbitrary JSON structures
 gleam add jelly@1
 ```
 ```gleam
+import gleam/io
 import jelly
 
 pub fn main() {
@@ -18,7 +19,7 @@ pub fn main() {
   // }
   let assert Ok(json) = jelly.parse("{ \"foo\": \"bar\" }")
   let assert Ok(jelly.String(foo)) = jelly.path(json, "foo")
-  io.debug(foo) // "bar"
+  io.print(foo) // "bar"
 }
 ```
 

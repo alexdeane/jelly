@@ -1,5 +1,6 @@
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
+import gleam/erlang/atom
 import gleam/int
 import gleam/io
 import gleam/list
@@ -26,7 +27,7 @@ pub type JsonType {
   Int(Int)
   String(String)
   Array(List(JsonType))
-  Object(dict.Dict(String, JsonType))
+  Object(Dict(String, JsonType))
 }
 
 pub fn parse(from json: String) -> Result(JsonType, DecodeError) {
@@ -41,7 +42,8 @@ pub fn parse(from json: String) -> Result(JsonType, DecodeError) {
 }
 
 /// Decodes any Dynamic into a JsonType which can be matched
-/// on to extract the data. If decoding fails, the dynamic value is returned.
+/// on to extract the data. If decoding fails for a given property,
+/// Unknown is returned.
 /// 
 pub fn decode(from value: dynamic.Dynamic) -> JsonType {
   case value |> dynamic.dict(dynamic.string, dynamic.dynamic) {
@@ -69,12 +71,16 @@ pub fn decode(from value: dynamic.Dynamic) -> JsonType {
                           |> list.map(decode)
                           |> Array
                         }
-                        Error(_) ->
-                          // We need a dynamic.nil
-                          case dynamic.classify(value) {
-                            "Nil" -> Null
-                            _ -> Unknown
+                        Error(_) -> {
+                          case atom.from_dynamic(value) {
+                            Ok(a) ->
+                              case atom.to_string(a) {
+                                "null" -> Null
+                                _ -> Unknown
+                              }
+                            Error(_) -> Unknown
                           }
+                        }
                       }
                   }
               }
@@ -94,8 +100,6 @@ pub fn path(json: JsonType, path: String) -> Result(JsonType, Nil) {
 
 fn do_path(json: JsonType, keys: List(PathKey)) -> Result(JsonType, Nil) {
   // Ensure we have a key
-  io.debug(keys)
-  io.debug(json)
   case keys {
     // If we are still here without any keys left,
     // we have our result
