@@ -12,7 +12,12 @@ gleam add jelly@1
 import jelly
 
 pub fn main() {
-  // TODO: An example of the project in use
+  // {
+  //   "foo": "bar"
+  // }
+  let assert Ok(json) = jelly.parse("{ \"foo\": \"bar\" }")
+  let assert Ok(jelly.String(foo)) = jelly.path(json, "foo")
+  io.debug(foo) // "bar"
 }
 ```
 

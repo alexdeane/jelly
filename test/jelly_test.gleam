@@ -60,8 +60,21 @@ pub fn nested_test() {
 }
 
 pub fn path_test() {
+  let assert Ok(json_text) = simplifile.read("test/data_types.json")
+  let assert Ok(json) = jelly.parse(json_text)
+
+  let assert Ok(jelly.String("a")) = jelly.path(json, "string")
+}
+
+pub fn nested_path_test() {
   let assert Ok(json_text) = simplifile.read("test/nested.json")
   let assert Ok(json) = jelly.parse(json_text)
 
   let assert Ok(jelly.String("g")) = jelly.path(json, "a.b.c.d[0].e[0].f")
+}
+
+pub fn readme_test() {
+  let assert Ok(json) = jelly.parse("{ \"foo\": \"bar\" }")
+  let assert Ok(jelly.String(foo)) = jelly.path(json, "foo")
+  let assert "bar" = foo
 }
