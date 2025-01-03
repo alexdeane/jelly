@@ -2,9 +2,8 @@ name: release
 
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [main]
+    paths-ignore: ['LICENSE', 'README.md', '.gitignore']
   pull_request:
 
 jobs:

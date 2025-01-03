@@ -1,4 +1,7 @@
 name = "jelly"
+licences = ["Apache-2.0"]
+description = "Gleam library for working with arbitrary JSON structures"
+
 version = "1.0.0"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
