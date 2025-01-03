@@ -2,6 +2,7 @@
 
 [![Package Version](https://img.shields.io/hexpm/v/jelly)](https://hex.pm/packages/jelly)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/jelly/)
+[![Latest CI](https://github.com/alexdeane/jelly/actions/workflows/release.yml/badge.svg)](https://github.com/alexdeane/jelly/actions/workflows/release.yml)
 
 JSON parsing library for arbitrary JSON structures
 
