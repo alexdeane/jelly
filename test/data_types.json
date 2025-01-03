@@ -1,0 +1,27 @@
+{
+    "string": "a",
+    "int": 1,
+    "float": 1.1,
+    "bool": true,
+    "int_array": [
+        1,
+        2,
+        3
+    ],
+    "float_array": [
+        1.1,
+        2.2,
+        3.3
+    ],
+    "string_array": [
+        "a",
+        "b",
+        "c"
+    ],
+    "mixed_array": [
+        1,
+        1.1,
+        "a"
+    ],
+    "object": {}
+}
