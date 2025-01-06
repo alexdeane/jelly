@@ -2,7 +2,6 @@ import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/erlang/atom
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{Some}
 import gleam/regexp
@@ -30,26 +29,35 @@ pub type JsonType {
   Object(Dict(String, JsonType))
 }
 
+/// Parses a string into a JsonType which can be matched
+/// on to extract the data. If decoding fails for a given property,
+/// Unknown is returned.
+/// 
 pub fn parse(from json: String) -> Result(JsonType, DecodeError) {
-  case decode_to_dict(json) {
+  case parse_dict(json) {
     Ok(dict) ->
       dict
       |> dynamic.from
-      |> decode
+      |> dynamic_to_json
       |> Ok
     Error(error) -> Error(error)
   }
 }
 
-/// Decodes any Dynamic into a JsonType which can be matched
-/// on to extract the data. If decoding fails for a given property,
+/// Parses a string into a Dict of Dynamic values
+/// 
+@external(erlang, "jelly_json", "decode")
+pub fn parse_dict(json: String) -> Result(Dict(Dynamic, Dynamic), DecodeError)
+
+/// Converts any Dynamic into a JsonType which can be matched
+/// on to extract the data. If conversion fails for a given property,
 /// Unknown is returned.
 /// 
-pub fn decode(from value: dynamic.Dynamic) -> JsonType {
+pub fn dynamic_to_json(from value: dynamic.Dynamic) -> JsonType {
   case value |> dynamic.dict(dynamic.string, dynamic.dynamic) {
     Ok(dict_value) -> {
       dict_value
-      |> dict.map_values(fn(_key, value) { decode(value) })
+      |> dict.map_values(fn(_key, value) { dynamic_to_json(value) })
       |> Object
     }
     Error(_) ->
@@ -68,7 +76,7 @@ pub fn decode(from value: dynamic.Dynamic) -> JsonType {
                       case dynamic.shallow_list(value) {
                         Ok(list_value) -> {
                           list_value
-                          |> list.map(decode)
+                          |> list.map(dynamic_to_json)
                           |> Array
                         }
                         Error(_) -> {
@@ -156,9 +164,6 @@ type PathKey {
   Indexer(Int)
   Property(String)
 }
-
-@external(erlang, "jelly_json", "decode")
-fn decode_to_dict(json: String) -> Result(Dict(Dynamic, Dynamic), DecodeError)
 
 fn list_get(list: List(a), index: Int) -> Result(a, Nil) {
   case index {
